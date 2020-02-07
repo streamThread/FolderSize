@@ -1,4 +1,7 @@
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] args) {
@@ -6,30 +9,15 @@ public class Main {
         File dir = new File("C:/AmericasCardroom");
         try {
             System.out.printf("Общий размер директории и вложенных файлов: %d байт", getDirSize(dir));
-        } catch (IllegalArgumentException iAE) {
-            System.out.println(iAE.getMessage());
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
     }
 
-    static long getDirSize(File dir) throws IllegalArgumentException {
-        long size = 0;
-        if (dir == null) {
-            throw new IllegalArgumentException("Директория пуста");
-        }
-        if (dir.isFile()) {
-            size = dir.length();
-        } else {
-            File[] subFiles = dir.listFiles();
-            if (subFiles != null) {
-                for (File file : subFiles) {
-                    if (file.isFile()) {
-                        size += file.length();
-                    } else {
-                        size += getDirSize(file);
-                    }
-                }
-            }
-        }
-        return size;
+    static long getDirSize(File dir) throws IOException {
+
+        return Files.walk(dir.toPath()).map(Path::toFile)
+                .filter(file -> file.isFile() & !Files.isSymbolicLink(file.toPath()))
+                .map(File::length).reduce(Long::sum).get();
     }
 }
